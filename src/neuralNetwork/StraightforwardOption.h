@@ -16,6 +16,8 @@ namespace snn
 	public:
 
 		bool autoSaveWhenBetter = false;
+		bool useMultithreading = true;
+
 		std::string saveFilePath = "save.snn";
 		float learningRate = 0.05f;
 		float momentum = 0.0f;
