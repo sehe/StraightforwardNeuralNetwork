@@ -30,7 +30,8 @@ StraightforwardNeuralNetwork::StraightforwardNeuralNetwork(const vector<int>& st
 	: NeuralNetwork(structureOfNetwork,
 	                activationFunctionByLayer,
 	                option.learningRate,
-	                option.momentum)
+	                option.momentum,
+					option.useMultithreading)
 {
 	this->option = option;
 }
@@ -74,17 +75,20 @@ void StraightforwardNeuralNetwork::train(Data& data)
 	this->numberOfTrainingsBetweenTwoEvaluations = data.sets[training].size;
 	this->wantToStopTraining = false;
 
+	this->evaluate(data);
+	data.shuffle();
+
 	for (this->numberOfIteration = 0; !this->wantToStopTraining; this->numberOfIteration++)
 	{
-		this->evaluate(data);
-		data.shuffle();
-
 		for (currentIndex = 0; currentIndex < this->numberOfTrainingsBetweenTwoEvaluations && !this->wantToStopTraining;
 		     currentIndex ++)
 		{
 			this->trainOnce(data.getTrainingData(currentIndex),
 			                data.getTrainingOutputs(currentIndex));
 		}
+
+		this->evaluate(data);
+		data.shuffle();
 	}
 }
 
@@ -161,7 +165,7 @@ void StraightforwardNeuralNetwork::trainingStop()
 	if (this->thread.joinable())
 		this->thread.join();
 	this->currentIndex = 0;
-	this->numberOfIteration = 0;
+	//this->numberOfIteration = 0;
 }
 
 

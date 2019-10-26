@@ -4,6 +4,19 @@ using namespace std;
 using namespace snn;
 using namespace internal;
 
+Layer::Layer(const int numberOfInputs,
+             const int numberOfNeurons,
+             const float learningRate,
+             const float momentum,
+             const bool useMultithreading)
+{
+	this->numberOfInputs = numberOfInputs;
+	this->numberOfNeurons = numberOfNeurons;
+	this->learningRate = learningRate;
+	this->momentum = momentum;
+	this->useMultithreading = useMultithreading;
+}
+
 int Layer::isValid() const
 {
 	if(this->neurons.size() != this->numberOfNeurons
@@ -33,6 +46,7 @@ Layer& Layer::operator=(const Layer& layer)
 	this->neurons = layer.neurons;
 	this->learningRate = layer.learningRate;
 	this->momentum = layer.momentum;
+	this->useMultithreading = layer.useMultithreading;
 	return *this;
 }
 
@@ -43,7 +57,8 @@ bool Layer::operator==(const Layer& layer) const
 		&& this->errors == layer.errors
 		&& this->neurons == layer.neurons
 		&& this->learningRate == layer.learningRate
-		&& this->momentum == layer.momentum;
+		&& this->momentum == layer.momentum
+		&& this->useMultithreading == layer.useMultithreading;
 }
 
 bool Layer::operator!=(const Layer& layer) const

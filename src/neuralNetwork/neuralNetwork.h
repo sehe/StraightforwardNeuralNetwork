@@ -22,6 +22,8 @@ namespace snn::internal
 		int numberOfInput{};
 		int numberOfOutputs{};
 
+		bool useMultithreading{};
+
 		std::vector<int> structureOfNetwork{};
 		std::vector<snn::activationFunctionType> activationFunctionByLayer{};
 
@@ -41,7 +43,8 @@ namespace snn::internal
 		NeuralNetwork(const std::vector<int>& structureOfNetwork,
 		              const std::vector<activationFunctionType>& activationFunctionByLayer,
 		              float learningRate = 0.05f,
-		              float momentum = 0.0f);
+		              float momentum = 0.0f,
+					  bool useMultithreading = false);
 
 		NeuralNetwork(const NeuralNetwork& neuralNetwork);
 

@@ -26,7 +26,12 @@ namespace snn::internal
 		float learningRate = 0;
 		float momentum = 0;
 
+		bool useMultithreading;
+
 	public:
+
+		Layer() = default;
+		Layer(int numberOfInputs, int numberOfNeurons, float learningRate, float momentum, bool useMultithreading);
 		virtual ~Layer() = default;
 
 		virtual std::vector<float> output(const std::vector<float>& inputs) = 0;
@@ -51,6 +56,7 @@ namespace snn::internal
 		ar & this->errors;
 		ar & this->learningRate;
 		ar & this->momentum;
+		ar & this->useMultithreading;
 		ar & this->neurons;
 	}
 }

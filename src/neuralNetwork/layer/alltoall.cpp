@@ -1,8 +1,10 @@
 #include "alltoall.h"
-#include <omp.h>
-#pragma warning(push, 0) 
+#pragma warning(push, 0)
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/base_object.hpp>
+#include <thread>
+#include <algorithm>
+#include <execution>
 #pragma warning(pop)
 
 using namespace std;
@@ -15,12 +17,10 @@ AllToAll::AllToAll(const int numberOfInputs,
                    const int numberOfNeurons,
                    activationFunctionType function,
                    float learningRate,
-                   float momentum)
+                   float momentum,
+                   bool useMultithreading)
+	: Layer(numberOfInputs, numberOfNeurons, learningRate, momentum, useMultithreading)
 {
-	this->numberOfInputs = numberOfInputs;
-	this->numberOfNeurons = numberOfNeurons;
-	this->learningRate = learningRate;
-	this->momentum = momentum;
 	this->neurons.reserve(numberOfNeurons);
 
 	for (int n = 0; n < numberOfNeurons; ++n)
@@ -31,40 +31,53 @@ AllToAll::AllToAll(const int numberOfInputs,
 
 vector<float> AllToAll::output(const vector<float>& inputs)
 {
-	vector<float> outputs(this->numberOfNeurons); // copy in heap on save in RAM, what is faster ?
-	//#pragma omp parallel for TODO : inputs is shared
-	for (int n = 0; n < numberOfNeurons; ++n)
-	{
-		outputs[n] = neurons[n].output(inputs);
-	}
+	vector<float> outputs(this->numberOfNeurons); // copy in heap or save in RAM, which is faster ?
+	int index = 0;
+	for_each(execution::par_unseq,
+	         neurons.begin(),
+	         neurons.end(),
+	         [&](auto&& neuron)
+	         {
+		         outputs[index] = neuron.output(inputs);
+		         index = index + 1;
+	         });
 	return outputs;
 }
 
 vector<float> AllToAll::backOutput(vector<float>& inputsError)
 {
 	vector<float> errors(this->numberOfInputs);
-	//#pragma omp parallel for
+
 	for (int n = 0; n < numberOfInputs; ++n)
 	{
 		errors[n] = 0;
 	}
 
-	//#pragma omp parallel for
-	for (int n = 0; n < numberOfNeurons; ++n)
-	{
-		auto result = neurons[n].backOutput(inputsError[n]);
-		for (int r = 0; r < numberOfInputs; ++r)
-			errors[r] += result[r];
-	}
+	int index = 0;
+	for_each(execution::par_unseq,
+	         neurons.begin(),
+	         neurons.end(),
+	         [&](auto&& neuron)
+	         {
+		         auto result = neuron.backOutput(inputsError[index]);
+		         for (int r = 0; r < numberOfInputs; ++r)
+			         errors[r] += result[r];
+		         index = index + 1;
+	         });
 	return errors;
 }
 
 void AllToAll::train(vector<float>& inputsError)
 {
-	for (int n = 0; n < numberOfNeurons; ++n)
-	{
-		neurons[n].backOutput(inputsError[n]);
-	}
+	int index = 0;
+	for_each(execution::par_unseq,
+	         neurons.begin(),
+	         neurons.end(),
+	         [&](auto&& neuron)
+	         {
+		         neuron.backOutput(inputsError[index]);
+		         index = index+1;
+	         });
 }
 
 int AllToAll::isValid() const
